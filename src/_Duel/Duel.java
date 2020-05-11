@@ -1,16 +1,12 @@
 package _Duel;
 
-import java.awt.BorderLayout;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.Instant;
 import javax.swing.Timer;
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
@@ -19,14 +15,17 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.DimensionUIResource;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
 
 
 public class Duel extends JFrame {
-
+    //объявление переменных
     public String player1 = new String("");
     public String player2 = new String("");
     public String cplayer = new String("");
-    public String s = new String("");
     public int score1 = 0;
     public int score2 = 0;
     public int t = 0;
@@ -42,36 +41,46 @@ public class Duel extends JFrame {
     private JPanel panel2 = new JPanel();
     private JPanel panel3 = new JPanel();
     private JPanel panel4 = new JPanel();
+    private JPanel respan = new JPanel();
+
+    private JTextArea res = new JTextArea("");
+    private JScrollPane scrollPaneInput = new JScrollPane(res);
     private JTextArea p1 = new JTextArea("");
     private JTextArea p2 = new JTextArea("");
+
     private JLabel label1 = new JLabel("Игрок 1");
     private JLabel label2 = new JLabel("Игрок 2");
-    private JButton ready = new JButton("Готовы");
-    private JRadioButton d1 = new JRadioButton("Легко") ;
-    private JRadioButton d2 = new JRadioButton("Нормально");
-    private JRadioButton d3 = new JRadioButton("Сложно");
-    private JButton Start = new JButton("OK, Let's do this");
     private JLabel label3 = new JLabel("К Барьеру"+cplayer);
     private JLabel label4 = new JLabel("3");
-    private JButton fire = new JButton("И тут я начинаю шмалять");
     private JLabel label5 = new JLabel("");
     private JLabel label6 = new JLabel("");
     private JLabel labelE = new JLabel("");
     private JLabel labelI = new JLabel("<html> <br>"+"Попадание в сердце - 15 очков, в голову - 8, в живот - 5 <br>"
             +"Размер окрестности попадания: легко - 300мс, нормально - 200мс, сложно - 100мс <br></html>");
 
+    private JRadioButton d1 = new JRadioButton("Легко") ;
+    private JRadioButton d2 = new JRadioButton("Нормально");
+    private JRadioButton d3 = new JRadioButton("Сложно");
     private ButtonGroup butg = new ButtonGroup();
+
+    private JButton ready = new JButton("Готовы");
+    private JButton Start = new JButton("OK, Let's do this");
+    private JButton fire = new JButton("И тут я начинаю шмалять");
+
     private Timer timer;
     private Timer timer1;
+    private Timer timres;
 
     // конструктор
     public Duel() {
 
         // инициализация компонентов
-        initMenu();
+        //initMenu();
         //initDiff();
         //initDuel();
         //initScore();
+        initRes();
+
         TimeClass tc = new TimeClass();
         int timerStep = 1;
         timer = new Timer(timerStep, tc);
@@ -79,9 +88,13 @@ public class Duel extends JFrame {
         TimeClass1 tc1 = new TimeClass1();
         timer1 = new Timer(1000, tc1);
 
+        TimeClass2 tc2 = new TimeClass2();
+        timres = new Timer(1000, tc2);
+
+        start();
     }
 
-    // метод инициализации компонентов формы
+    // метод инициализации главного меню
     private void initMenu() {
         getContentPane().removeAll();
         getContentPane().revalidate();
@@ -100,14 +113,14 @@ public class Duel extends JFrame {
         labelE.setBounds(100, 120, 300, 25);
         labelE.setHorizontalTextPosition(JLabel.CENTER);
 
-        //кнопки
+        //кнопка
         ready.setBounds(200,85, 100, 25);
 
-        // зарегистрировать экземпляр класса обработчика события
+        // зарегистрировать экземпляр класса обработчика события по кнопке
         ActionListener actionListener = new readyEvent();
         ready.addActionListener(actionListener);
 
-        // панели
+        // панель
         panel1.setLayout(null);
         panel1.setBorder(new CompoundBorder(new EmptyBorder(5, 5, 5, 5), new TitledBorder("Start menu")));
         panel1.setPreferredSize(new Dimension(480, 230));
@@ -117,9 +130,11 @@ public class Duel extends JFrame {
         panel1.add(label2);
         panel1.add(ready);
         panel1.add(labelE);
+        //добавление панели на контейнер
         container.add(panel1);
 
     }
+    // метод инициализации выбора сложности
     private void initDiff()
     {
         getContentPane().removeAll();
@@ -188,6 +203,7 @@ public class Duel extends JFrame {
         container.add(panel2);
     }
 
+    //окно инициализации дуэли
     private void initDuel()
     {
 
@@ -218,7 +234,7 @@ public class Duel extends JFrame {
 
 
     }
-
+    //окно инициализации результатов
     private void initScore()
     {
         getContentPane().removeAll();
@@ -241,6 +257,26 @@ public class Duel extends JFrame {
         label6.setText(player2 + "   "+score2);
 
     }
+    //окно инициализации списка результатов
+    private void initRes() {
+        getContentPane().removeAll();
+        getContentPane().revalidate();
+
+        setBounds(200, 150, 500, 250);
+        // контейнер для размещения компонентов формы
+        Container container = getContentPane();
+
+        scrollPaneInput.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPaneInput.getVerticalScrollBar().setUnitIncrement(10);
+        respan.add(scrollPaneInput, BorderLayout.CENTER);
+        respan.setBorder(new CompoundBorder(new EmptyBorder(5, 5, 5, 5), new TitledBorder("Tab results")));
+        res.setBounds(75, 50, 400, 100);
+        res.setPreferredSize(new Dimension(400, 100));
+        new Izfile2();
+        res.setEditable(false);
+        timerDel1 = 5;
+        container.add(respan);
+    }
 
 
 //----------------------------------------------------------------------
@@ -250,7 +286,6 @@ public class Duel extends JFrame {
             t = 0;
         }
 
-        // время пошло , не работает все время срабатывает следующий класс
         @Override
         public void actionPerformed(ActionEvent ts) {
             t++;
@@ -263,7 +298,6 @@ public class Duel extends JFrame {
             timerDel = 3;
         }
 
-        // время пошло , не работает все время срабатывает следующий класс
         @Override
         public void actionPerformed(ActionEvent ts1) {
             label3.setText("К Барьеру,   " + cplayer);
@@ -278,6 +312,30 @@ public class Duel extends JFrame {
                 timer.setRepeats(true);
             }
         }
+    }
+
+    public class TimeClass2 implements ActionListener
+    {
+        public TimeClass2()
+        {
+            timerDel1 = 5;
+        }
+        public void actionPerformed(ActionEvent ts1)
+        {
+            if (timerDel1 !=0) {
+                timerDel1--;
+            }else if(timerDel1 == 0)
+            {
+                timres.stop();
+                initMenu();
+            }
+
+        }
+    }
+
+    private void start() {
+        System.out.println("> Запуск");
+        timres.start();
     }
 
 
@@ -303,6 +361,8 @@ public class Duel extends JFrame {
         }
     }
 
+
+    //событие кнопки стрельбы
     public class fireEvent implements ActionListener {
 
         @Override
@@ -426,14 +486,15 @@ public class Duel extends JFrame {
         }
     }
 
+    //метод записи в файл
     public void w() {
 
-        try(FileWriter writer = new FileWriter("result.txt", false))
+        try(FileWriter writer = new FileWriter("result.txt", true))
         {
-            String text1 = ("* \n"+ player1 +"\n"+score1+"\n");
-            String text2 = ("* \n"+ player2 +"\n"+score2+"\n");
-            writer.write(text1);
-            writer.write(text2);
+            String text1 = ("\n"+ player1 +"\n"+score1+"\n");
+            String text2 = ("\n"+ player2 +"\n"+score2+"\n");
+            writer.append(text1);
+            writer.append(text2);
 
             writer.close();
             writer.flush();
@@ -444,33 +505,52 @@ public class Duel extends JFrame {
             System.out.println(ex.getMessage());
         }
     }
-/*
-    public void r() {
+    //метод чтения через stringbuilder
+    public class FileReaderClass {
+        public String read() {
+            StringBuilder sb = new StringBuilder();
+            try {
+                String s;
+                int n=0;
+                int i=2;
+                FileReader fr = new FileReader("result.txt");
+                BufferedReader br = new BufferedReader(fr);
+                LineNumberReader lr = new LineNumberReader(br);
+                while ((s = lr.readLine()) != null) {
+                    i++;
+                    if (i == 3)
+                    {
+                        sb.append("\n");
+                        n++;
+                        sb.append(n);
+                        i=0;
 
-        try(FileReader reader = new FileReader("result.txt"))
-        {
-            // читаем посимвольно
-            int c;
-            while((c=reader.read())!=-1){
+                    }
+                    sb.append(s);
+                    sb.append("  ");
 
-                System.out.print((char)c);
+                }
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
             }
-        }
-        catch(IOException ex){
-
-            System.out.println(ex.getMessage());
+            return sb.toString();
         }
     }
-*/
 
+    FileReaderClass myIzfile1 = new FileReaderClass();
+
+    //создание класса для передачи в текстовое поле из файла
+    public class Izfile2 {
+        public Izfile2() {
+            res.append(myIzfile1.read());
+        }
+    }
 
     public static void main(String[] args) {
-
         // объект графической формы
         Duel graphic = new Duel();
         // закрытие формы
         graphic.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
         // визуализация формы
         graphic.setVisible(true);
     }
