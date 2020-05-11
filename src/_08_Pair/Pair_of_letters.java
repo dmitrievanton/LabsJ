@@ -43,4 +43,24 @@ public class Pair_of_letters {
 
         return result.toString();
     }
+    public static String deletePairedLetters2(String input){
+
+        if(input == null || input.length() <= 1){
+            return input;
+        }
+
+        var oldString = input;
+        boolean isEnd;
+        do {
+            var newString = deletePairedLetters1(oldString);
+
+            isEnd = newString.length() == oldString.length();
+
+            oldString = newString;
+        }
+        while (!isEnd);
+
+        return oldString;
+    }
+
 }
